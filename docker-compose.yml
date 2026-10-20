@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  vector-store:
+    image: qdrant/qdrant:v1.9.0
+    container_name: rag-vector-store
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  rag-api:
+    image: python:3.11-slim
+    container_name: rag-orchestrator-service
+    working_dir: /app
+    volumes:
+      - ./:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+      - VECTOR_STORE_URL=http://vector-store:6333
+      - CONFIDENCE_THRESHOLD=0.88
+    command: sh -c "echo 'HITL RAG Orchestrator initialized on port 8000' && tail -f /dev/null"
+    depends_on:
+      - vector-store
+
+volumes:
+  qdrant_data:
